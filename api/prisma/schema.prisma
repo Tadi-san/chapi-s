@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+ id         String    @id @default(uuid()) @map("_id")
+  password  String?
+  name      String?
+  field     String   @default("")
+}
+
+model Order {
+  id               String    @id @default(uuid()) @map("_id")
+  waiter      String?
+  table       Int       
+  items       OrderItem[]
+  total       Float     
+  paid        Boolean @default(false)
+  served      Boolean @default(false)
+  createdAt   DateTime  @default(now())
+}
+
+model OrderItem {
+ id               String    @id @default(uuid()) @map("_id")
+  order      Order     @relation(fields: [orderId], references: [id])
+  orderId    String
+  menuItem   Menu?      @relation(fields: [menuItemId], references: [id])
+  menuItemId String
+  quantity   Int       
+}
+
+model Menu {
+  id               String    @id @default(uuid()) @map("_id")
+  name      String   
+  price     Float    
+  category  String
+  orderItem OrderItem[]
+}
