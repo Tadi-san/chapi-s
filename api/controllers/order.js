@@ -12,6 +12,7 @@ const orderController = {
           table,
           total,
           waiter,
+          total,
         },
       });
 
@@ -186,228 +187,149 @@ const orderController = {
   }
 },
 // Actions
+payOrder:async (req, res)=>{
+  try {
+    const {id} = req.body;
+    const order = await prisma.order.findUnique({
+      where:{id},
+      data:{
+        served:true
+      }
+    })
+    res.status(200).json(order) 
+  } catch (error) {
+    
+  }
+},
+unpayOrder:async (req, res)=>{
+  try {
+    const {id} = req.body;
+    const order = await prisma.order.findUnique({
+      where:{id},
+      data:{
+        paid:false
+      }
+    })
+    res.status(200).json(order) 
+  } catch (error) {
+    
+  }
+},
+serveOrder:async (req, res)=>{
+  try {
+    const {id} = req.body;
+    const order = await prisma.order.findUnique({
+      where:{id},
+      data:{
+        served:true
+      }
+    })
+    res.status(200).json(order) 
+  } catch (error) {
+    
+  }
+},
+unserveOrder:async (req, res)=>{
+  try {
+    const {id} = req.body;
+    const order = await prisma.order.findUnique({
+      where:{id},
+      data:{
+        served:false
+      }
+    })
+    res.status(200).json(order) 
+  } catch (error) {
+    
+  }
+},
+
+// Get Actions
+
+getPaid:async (req,res)=>{
+  try {
+    const orders = await prisma.order.findMany({
+      where:{paid:true}
+    })
+    if (!orders){
+      console.log("faild to get paid orders")
+      res.status(500).json("faild to get paid orders")
+    }
+
+    res.status(200).json(orders)
+  } catch (error) {
+    
+  }
+},
+getUnpaid:async (req,res)=>{
+  try {
+    const orders = await prisma.order.findMany({
+      where:{paid:false}
+    })
+    if (!orders){
+      console.log("faild to get unpaid orders")
+      res.status(500).json("faild to get unpaid orders")
+    }
+    
+    res.status(200).json(orders)
+  } catch (error) {
+    
+  }
+},
+getServed:async (req,res)=>{
+  try {
+    const orders = await prisma.order.findMany({
+      where:{served:true}
+    })
+    if (!orders){
+      console.log("faild to get served orders")
+      res.status(500).json("faild to get served orders")
+    }
+    
+    res.status(200).json(orders)
+  } catch (error) {
+    
+  }
+},
+getUnserve:async (req,res)=>{
+  try {
+    const orders = await prisma.order.findMany({
+      where:{served:false}
+    })
+    if (!orders){
+      console.log("faild to get unServed orders")
+      res.status(500).json("faild to get unServed orders")
+    }
+
+    res.status(200).json(orders)
+  } catch (error) {
+    
+  }
+},
+getUnpaidUnserved: async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: {
+        served: false,
+        paid: false,
+      },
+      include:{
+        items: true
+      }
+    });
+
+    if (orders.length === 0) {
+      return res.status(404).json({ message: 'No unpaid and unserved orders found.' });
+    }
+
+    res.status(200).json(orders);
+  } catch (error) {
+    console.error('Error getting unpaid and unserved orders:', error);
+    res.status(500).json({ message: 'Failed to get unpaid and unserved orders.' });
+  }
+},
+
 
 };
 
 export default orderController;
-
-
-// router.get("/yalderese", async (req, res) => {
-  
-//     // const user = await User.findById()
-//     // user.notification = null
-//     // await user.save()
-
-//   try {
-//     const orders = await Order.find({ made: false })
-//       .sort({ _id: -1 })
-//       .limit(20)
-//       .exec();
-//     res.json(orders);
-//   } catch (error) {
-//     res.json(error);
-//   }
-// });
-
-// router.post("/yederese", async (req, res) => {
-//   const { name } = req.body;
-//   try {
-//     const orders = await Order.find({ made: true })
-//       .sort({ _id: -1 })
-//       .limit(20)
-//       .exec();
-//     const user = await User.findOne({name:name});
-    
-//     if (user.notification === "" || user.notification === null) {
-//       res.json(orders);
-//     } else {
-//       user.notification = "";
-//       await user.save();
-//       res.json(orders);
-//     }
-//   } catch (error) {
-//     console.log(error);
-//   }
-// });
-
-// router.post("/get-food", async (req, res) => {
-//   const { id } = req.body;
-//   const order = await Order.findById(id);
-//   if (order) {
-//     const { items } = order;
-//     const menuItemIds = items.map((item) => item.menuItem);
-//     const menuItems = await Menu.find({ _id: { $in: menuItemIds } });
-
-//     // Create an array of menu items with their respective quantities and prices
-//     const itemsWithQuantities = items.map((item) => {
-//       const menuItem = menuItems.find(
-//         (menu) => menu._id.toString() === item.menuItem.toString()
-//       );
-//       const price = menuItem ? menuItem.price : null;
-//       return { menuItem, quantity: item.quantity, price };
-//     });
-
-//     res.json(itemsWithQuantities);
-//   } else {
-//     res.json("This order is not in the database.");
-//   }
-// });
-// router.post("/pay/:id", async (req, res) => {
-//   const { id } = req.params;
-//   const { name } = req.body;
-//   const order = await Order.findById(id);
-
-//   if (order) {
-//     order.set({
-//       cashier: name,
-//       paid: true,
-//     });
-//     await order.save();
-//     console.log(name)
-//     const cashier = await User.findOne({ name: name });
-//     console.log(cashier)
-//     if (cashier) {
-//       cashier.MoneyMade = cashier.MoneyMade + order.total;
-//       cashier.itemsSold = cashier.itemsSold + 1;
-//       await cashier.save();
-//       res.json(order);
-//     } else {
-//       res.json("Cashier not found");
-//     }
-//   } else {
-//     res.json("Order not found");
-//   }
-// });
-
-// router.post("/unpay/:id", async (req, res) => {
-//   const { id } = req.params;
-//   const order = await Order.findById(id);
-//   if (order) {
-//     order.set({
-//       paid: false,
-//     });
-//     await order.save();
-//     res.json(order);
-//   } else {
-//     res.json("order Not found");
-//   }
-// });
-
-// router.get("/unpaid", async (req, res) => {
-//   try {
-//     const orders = await Order.find({ paid: false })
-//       .sort({ _id: -1 })
-//       .limit(30)
-//       .exec();
-//     res.json(orders);
-//   } catch (error) {
-//     res.json(error);
-//   }
-// });
-
-// router.get("/paid", async (req, res) => {
-//   try {
-//     const orders = await Order.find({ paid: true })
-//       .sort({ _id: -1 })
-//       .limit(30)
-//       .exec();
-
-//     res.json(orders);
-//   } catch (error) {
-//     console.log(error);
-//   }
-// });
-
-// router.get("/unmade", async (req, res) => {
-//   try {
-//     const orders = await Order.find({ made: false })
-//       .sort({ _id: -1 })
-//       .limit(30)
-//       .exec();
-//     res.json(orders);
-//   } catch (error) {
-//     res.json(error);
-//   }
-// });
-
-// router.get("/made", async (req, res) => {
-//   try {
-//     const orders = await Order.find({ made: true })
-//       .sort({ _id: -1 })
-//       .limit(30)
-//       .exec();
-
-//     res.json(orders);
-//   } catch (error) {
-//     console.log(error);
-//   }
-// });
-
-// router.post("/unmake/:id", async (req, res) => {
-//   const { id } = req.params;
-//   // const name = req.session.name
-//   const order = await Order.findById(id);
-//   if (order) {
-//     order.set({
-//       // cashier:name,
-//       made: false,
-//     });
-//     await order.save();
-//     res.json(order);
-//   } else {
-//     res.json("order Not found");
-//   }
-// });
-
-// router.post("/make/:id", async (req, res) => {
-//   const { id } = req.params;
-//   const { name } = req.body;
-//   const order = await Order.findById(id);
-  
-//   if (order) {
-//     order.made = true;
-//     order.chef = name;
-//     await order.save();
-    
-//     const waiter = await User.findOne({ name: order.waiter });
-    
-//     if (waiter) {
-//       console.log(waiter)
-//       waiter.notification = name;
-//       await waiter.save();
-//       console.log(waiter)
-//     }
-    
-//     res.json(order);
-//   } else {
-//     res.json("Order not found");
-//   }
-// });
-// router.post('/serve/:id', async(req,res)=>{
-//   const {id} = req.params
-//   const order = await Order.findById(id)
-//   if (order){
-//     order.served = true
-//     await order.save()
-//     res.json(order)
-//   }
-//   else{
-//     res.json("order not found")
-//   }
-// })
-
-// router.post('/unserve/:id', async(req,res)=>{
-//   const {id} = req.params
-//   const order = await Order.findById(id)
-//   if (order){
-//     order.served = false
-//     await order.save()
-//     res.json(order)
-//   }
-//   else{
-//     res.json("order not found")
-//   }
-// })
-
-
-// module.exports = router;

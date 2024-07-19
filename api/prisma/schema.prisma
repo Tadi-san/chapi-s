@@ -23,6 +23,7 @@ model Order {
   paid        Boolean @default(false)
   served      Boolean @default(false)
   createdAt   DateTime  @default(now())
+  updatedAt    DateTime 
 }
 
 model OrderItem {

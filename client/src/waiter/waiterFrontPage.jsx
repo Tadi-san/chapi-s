@@ -14,8 +14,6 @@ export default function WaiterFrontPage() {
   const [user, setUser] = useState()
   const [yetekefele, setyetekefele] = useState()
   const [name, setName] = useState()
-  // const [notificationUser, setNotficationUser] = useState()
-  // const [sound, setSound] = useState(false)
 
   function handleButton1() {
     setPicked1(true);
@@ -33,7 +31,6 @@ export default function WaiterFrontPage() {
     settzaz(null)
     getYetekefele()
   }
-
   function handleButton2() {
     setPicked2(true);
     setPicked1(false);
@@ -52,18 +49,11 @@ export default function WaiterFrontPage() {
         setName(data.user.name)
       })
   }
-  // function getUserNotfication(user){
-  //   const id = user?.id || user?._id  
-  //     axios.post('/user/notification', {id
-  //     }).then(({data})=>{
-  //       setUser(data.user)
-  //     setName(data.user.name)})
-  // }
   function gettzaz(){
-    axios.get('/order/tzaz').then(({data})=> settzaz(data))
+    axios.get('/orders/unpaid-unserved').then(({data})=> setOrder(data))
   }
   function getYetekefele(){
-    axios.get('/order/yetekefele').then(({data})=> setyetekefele(data))
+    axios.get('/order/yetekefele').then(({data})=> setOrder(data))
   }
   function showAll(){
     axios.get('/order/all').then(({data})=>setOrder(data))
@@ -76,22 +66,13 @@ function getyekerebe(){
     gettzaz()
   },[])
 
-  // useEffect(() => {
-  //   const interval = setInterval(() => {
-  //     getUserNotfication(user);
-  //   }, 10000);
-  
-  //   return () => {
-  //     clearInterval(interval);
-  //   };
-  // }, [user]);
   if (redirect) {
     return <Navigate to={"/waiter/addis"} />;
   }
   return (
-    <div className={picked2?" flex flex-col relative bg-[url('/Waiters-pana.svg')] bg-no-repeat  bg-center min-h-screen":" flex flex-col relative bg-[url('/green.svg')] bg-no-repeat  bg-center min-h-screen"}>
+    <div className={" flex flex-col relative bg-[url('/brown.svg')] bg-no-repeat bg-[#111]  bg-center min-h-screen"}>
      <div className=" sticky">
-      <div className="min-h-8 flex justify-between gap-5 p-2 mb-2 bg-[#c19250]  w-full items-start">
+      <div className="min-h-8 flex justify-between gap-5 p-2 mb-2 bg-[#111]  w-full items-start">
         <div className="flex justify-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -107,25 +88,25 @@ function getyekerebe(){
               d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
             />
           </svg>
-        <span className="text-2xl font-semibold text-gray-100">
+        <span className="text-2xl font-semibold text-[#d3ac75]">
           {user?.name}
         </span>
         </div>
         <button 
         onClick={showAll}>
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="w-8 h-8 text-[#d3ac75]">
   <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M12 17.25h8.25" />
 </svg>
 
         </button>
       </div>
-      <nav className=" bg-transparent border-b-2 flex justify-center gap-8 p-1">
+      <nav className=" bg-transparent  flex justify-center gap-8 p-1">
         <button
           onClick={handleButton2}
           className={
             picked2
-              ? "bg-[#d3ac75] relative text-white rounded-full px-8 text-lg"
-              : " bg-white border relative text-black text-lg p-2 px-8 rounded-full"
+              ? "bg-[#d3ac75] relative text-white rounded-full px-7 text-lg"
+              : " bg-[#222]  relative text-white text-lg p-2 px-7 rounded-full"
           }
         >
           ትዛዝ
@@ -136,29 +117,19 @@ function getyekerebe(){
           onClick={handleButton1}
           className={
             picked1
-              ? "bg-[#d3ac75] text-white rounded-full relative px-8 text-lg"
-              : " bg-white border relative text-black text-lg p-2 px-8 rounded-full"
+              ? "bg-[#d3ac75] text-white rounded-full relative px-7 text-lg"
+              : " bg-[#222]  relative text-white text-lg p-2 px-7 rounded-full"
           }
         >
-          የቀረበ
-          
-          {user?.notification &&(
-          <div className="h-3 w-3 rounded-full bg-red-500 -top-1 right-1  absolute ">
-            
-          </div>
-          )}
-
-{user?.notification && (
-  <audio src={notificationSound} autoPlay />
-)}
+          የቀረበ      
         </button>
 
         <button
           onClick={handleButton3}
           className={
             picked3
-              ? "bg-[#d3ac75] text-white rounded-full relative px-8 text-lg"
-              : " bg-white border relative text-black text-lg p-2 px-8 rounded-full"
+              ? "bg-[#d3ac75] text-white rounded-full relative px-7 text-lg"
+              : " bg-[#222]  relative text-white text-lg p-2 px-7 rounded-full"
           }
         >
           የተከፈለ
@@ -194,7 +165,7 @@ function getyekerebe(){
       <div className=" fixed bg-transparent top-[90%] p-4 text-center w-full">
         <button
           onClick={() => setRedirect(true)}
-          className="bg-[#d3ac75] text-2xl rounded-3xl w-full p-2"
+          className="bg-[#d3ac75]  text-2xl rounded-3xl w-full p-2 text-[#fff]"
         >
           አዲስ ትዛዝ
         </button>

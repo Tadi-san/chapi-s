@@ -17,7 +17,9 @@ const menuController = {
 
       const menu = await prisma.menu.create({
         data: {
-          name, price, category
+          name, 
+          price:parseInt(price), 
+          category
         },
       });
 
@@ -38,7 +40,7 @@ const menuController = {
   },
   getMenuById: async (req, res) => {
     try {
-      const { id } = req.params;
+      const { id } = req.body;
 
       const menu = await prisma.menu.findUnique({ where: { id } });
 
@@ -88,105 +90,22 @@ const menuController = {
       res.status(500).json({ error: "Failed to delete menu" });
     }
   },
+
+  // Actions 
+
+  // getFood:async (req,res)=>{
+  //   try {
+  //     const menuItems = await prisma.menu.findMany({
+  //       where:{category:"Food"}
+  //     })
+  //     if (!menu){
+
+  //     }
+  //   } catch (error) {
+      
+  //   }
+  // },
+
 };
 
 export default menuController;
-
-
-// router.post('/add', async (req, res) => {
-//     const {name, category, price} = req.body
-//                 try{
-//                     const item = await Menu.create({
-//                         name, category, price
-//                     })
-//                     res.json(item)
-//                 } 
-//                 catch(err){
-//                     res.json(err)
-//                 }      
-// })
-
-// router.get('/food', async(req,res)=>{
-//     const foods = await Menu.find({category:"Food"})
-//     if(foods){
-//         res.json(foods)
-//         }
-//     else{
-//         res.json("error ocured finding food menu")
-//     }
-// })
-// router.get('/drink', async(req,res)=>{
-//     const drinks = await Menu.find({category:"Drink"})
-//     if(drinks){
-//         res.json(drinks)
-//         }
-//     else{
-//         res.json("error ocured finding food menu")
-//     }
-// })
-
-// router.get('/other', async(req,res)=>{
-//     const others = await Menu.find({category:"Other"})
-//     if(others){
-//         res.json(others)
-//         }
-//     else{
-//         res.json("error ocured finding food menu")
-//     }
-// })
-
-// router.get('/:id', async (req,res)=>{
-//     const {id} = req.params
-//     const menu = await Menu.findById(id)
-  
-//       if(menu){
-//           return res.json(menu)
-//       }
-//       else{
-//         res.json("Menu not found")
-//       }
-//   })
-
-
-  
-//   router.post("/edit/:id", async (req, res) => {
-//     const { id } = req.params;
-//     const { name, price, category } = req.body;
-  
-//     try {
-//       const menu = await Menu.findById(
-//         id,
-//       );
-  
-//       if (menu) {
-//           menu.name =name,
-//           menu.price = price,
-//           menu.category = category
-//           await menu.save()
-//           res.json(menu);
-//       } else {
-//         res.status(404).json("User not found");
-//       }
-//     } catch (error) {
-//       res.status(422).json(error);
-//     }
-//   });
-
-//   router.delete("/delete/:id", async (req, res) => {
-//     const { id } = req.params;
-  
-//     try {
-//       const deletedMenu = await Menu.findByIdAndDelete(id);
-  
-//       if (deletedMenu) {
-//         res.json(deletedMenu);
-//       } else {
-//         res.status(404).json("Menu not found");
-//       }
-//     } catch (error) {
-//       res.status(422).json(error);
-//     }
-//   });
-
-  
-// module.exports = router;

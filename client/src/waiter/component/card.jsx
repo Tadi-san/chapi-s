@@ -12,26 +12,27 @@ function Card({ food, onAdd, onRemove }) {
   };
 
   return (
-    <div className=" flex-col flex bg-transparent w-fit ">
+    <div className=" flex-col flex bg-transparent w-fit bg-[#333]">
 
-      <div className="flex relative justify-center w-[107px] h-[100px] rounded-xl bg-white items-center">
-      <span className=" font-semibold">{food?.name}</span>
-      <span className="absolute top-1 left-2 font-semibold text-red-400 "> {food?.price} birr </span>
+      <div className="flex relative justify-center w-[107px] bg-[#333] h-[100px]  items-center">
+      <span className=" font-semibold text-[#fdcc87]">{food?.name}</span>
+      <span className="absolute top-1 left-2 font-semibold text-[#d3ac75] "> {food?.price} birr </span>
       </div>
 
-      <div className=" bg-transparent mt-1 flex justify-center">
+      <div className=" bg-transparent border-t-2 border-[#d3ac75] text-[#d3ac75] flex justify-center">
        
         {count !== 0 ? (
-          <button className=" rounded-full px-2 bg-white text-red-400 font-semibold text-xl" onClick={handleDecrement} >-</button>
+          <button className="  px-3 bg-[#333] text-red-400 font-semibold text-xl" onClick={handleDecrement} >-</button>
         ) : (
           ""
         )}
               <span
-        className={`${count !== 0 ? "block bg-white w-full rounded-2xl font-bold" : "hidden"}`+ ""}
+        className={`${count !== 0 ? "block bg-[#333] w-full  font-bold" : "hidden"}`+ ""}
       >
         {count}
       </span>
-         <button className=" rounded-full px-2 bg-white text-green-400 font-semibold text-xl" onClick={handleIncrement} >+</button>
+       
+         <button className="  px-2 bg-[#333] text-green-400 font-semibold text-xl" onClick={handleIncrement} >+</button>
       </div>
     </div>
   );
