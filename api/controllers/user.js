@@ -1,132 +1,149 @@
-const express = require("express");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
-const bcryptSalt = bcrypt.genSaltSync(10);
-const router = express.Router();
-const User = require("../models/user");
-const jwtSecret = "fasefraw4r5r3wq45wdfgw34twdfg";
-router.post("/add", async (req, res) => {
-  const { name, password, field } = req.body;
-  const userDoc = await User.findOne({ name });
-  if (userDoc) {
-    res.json("an acount with this email already exists, try logging in ");
-  } else {
+import prisma from "../config/prismaConfig.js";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+const secretKey = process.env.JWT_SECRET;
+const saltRounds = 10;
+
+
+const userController = {
+  createUser: async (req, res) => {
     try {
-      await User.create({
-        name,
-        password: bcrypt.hashSync(password, bcryptSalt),
-        field,
+      const { password, name, field , cafe_id} =
+        req.body;
+      // check if user exists
+      const existingUser = await prisma.user.findFirst({
+        where: { name, field },
+    });
+    // check if cafe exists
+    const cafe = await prisma.cafe.findFirst({
+      where: { id: cafe_id },
+    })
+    if (!cafe) {
+      return res.status(400).json({ error: "cafe does not exist" });
+    }
+
+      if (existingUser) {
+        return res.status(400).json({ error: "user already exists" });
+      }
+        // hash password
+        // const salt = bcrypt.genSaltSync(bcryptSalt);
+        // const hashPass = bcrypt.hashSync(password, salt);
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+      const user = await prisma.user.create({
+        data: {
+            name, 
+            password:hashedPassword,
+            field,
+            cafe_id
+        },
       });
-      res.json("Great");
+
+      res.status(200).json(user);
     } catch (error) {
-      res.status(422).json(error);
+      console.error({ error: "Failed to create user" });
+      res.status(500).json({ error: "Failed to add user" });
     }
-  }
-});
-router.post('/login', async (req, res) => {
-  const { name, password } = req.body;
-  const userDoc = await User.findOne({ name });
+  },
+  loginUser: async (req, res) => {
+    try {
+      const { name, password } = req.body;
+  
+      // Check if field is provided
 
-  if (userDoc) {
-    const passOk = bcrypt.compareSync(password, userDoc.password);
-
-    if (passOk) {
-      const token = jwt.sign(
-        { id: userDoc.id, name: userDoc.name, field: userDoc.field },
-        jwtSecret,
-        { expiresIn: '24h' }
-      );
-      res.json({ token: token });
-    } else {
-      res.status(401).json({ error: 'Invalid credentials' });
-    }
-  } else {
-    res.status(404).json('User not found');
-  }
-});
-
-function verifyToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) {
-    return res.status(401).json({ error: 'No token provided' });
-  }
-
-  jwt.verify(token, jwtSecret, (err, decoded) => {
-    if (err) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-
-    req.user = { ...decoded };
-    res.json({ user: req.user });
-    next();
-  });
-}
-router.get('/', verifyToken, (req, res) => {
-});
-router.post('/notification', async (req, res) => {
-  const {id} = req.body
-  // console.log(id)
-  const user = await User.findById(id)
-  // console.log(user)
-  if (user){
-    res.json({user:user})
-  }
-
-});
-router.get("/all", async (req, res) => {
-   
-      try {
-        res.json(await User.find());
-      } catch (error) {
-        res.status(404).json("User not found");
+  
+      const user = await prisma.user.findFirst({
+        where: { name },
+      });
+  
+      if (!user) {
+        return res.status(400).json({ error: "User does not exist" });
       }
   
-});
-router.get('/:id', async (req,res)=>{
-  const {id} = req.params
-  const user = await User.findById(id)
-    if(user){
-      console.log(user)
-        return res.json(user)
+      const passwordMatch = await bcrypt.compare(password, user.password);
+      if (!passwordMatch) {
+        return res.status(400).json({ error: "Invalid password" });
+      }
+  
+      const responseToken = jwt.sign({ type: 'user', userId: user.id }, secretKey);
+      res.json({ user, token: responseToken });
+    } catch (error) {
+      console.error({ error: "Failed to login user" });
+      res.status(500).json({ error: "Failed to login user" });
     }
-    else{
-      res.json("worker not found")
+  },
+  getUsers: async (req, res) => {
+    try {
+      const {cafe_id} = req.body
+      const user = await prisma.user.findMany({
+        where: {cafe_id: cafe_id},
+      });
+      res.status(200).json(user);
+    } catch (error) {
+      console.error("Error retrieving user:", error);
+      res.status(500).json({ error: "faild to get user" });
     }
-})
-router.post("/edit/:id", async (req, res) => {
-  const { id } = req.params;
-  const { name, password, field } = req.body;
-  try {
-    const user = await User.findById(
-      id,
-    );
+  },
 
-    if (user) {
-        user.name =name,
-        user.password = bcrypt.hashSync(password, bcryptSalt),
-        user.field = field
-        await user.save()
-        res.json(user);
-    } else {
-      res.status(404).json("User not found");
-    }
-  } catch (error) {
-    res.status(422).json(error);
-  }
-});
-router.delete("/delete/:id", async (req, res) => {
-  const { id } = req.params;
-  try {
-    const deletedUser = await User.findByIdAndDelete(id);
+  getUserById: async (req, res) => {
+    try {
+      const { id } = req.params;
 
-    if (deletedUser) {
-      res.json(deletedUser);
-    } else {
-      res.status(404).json("User not found");
+      const user = await prisma.user.findUnique({ where: { id } });
+
+      if (!user) {
+        return res.status(404).json({ error: "user not found" });
+      }
+      res.status(200).json(user);
+    } catch (error) {
+      console.error("Error retrieving user:", error);
+      res.status(500).json({ error: "Failed to get the payer" });
     }
-  } catch (error) {
-    res.status(422).json(error);
-  }
-});
-module.exports = router;
+  },
+  updateUser: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const {name, field, password} =
+        req.body;
+
+      const existinguser = await prisma.user.findUnique({
+        where: { id },
+      });
+
+      if (!existinguser) {
+        return res.status(404).json({ error: "user not found" });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+      const updateduser = await prisma.user.update({
+        where: { id },
+        data:{
+          name, 
+          field, 
+          password:hashedPassword,
+        },
+      });
+
+      res.status(200).json(updateduser);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  },
+  deleteuser: async (req, res) => {
+    try {
+      const { id } = req.params;
+      await prisma.user.delete({
+        where: { id },
+      });
+      res.json({ message: "user deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ error: "Failed to delete user" });
+    }
+  },
+
+
+};
+
+export default userController;

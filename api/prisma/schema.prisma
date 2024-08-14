@@ -6,24 +6,40 @@ datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
+ 
+model Cafe {
+ id         String    @id @default(uuid()) @map("_id")
+  name      String?
+  users     User[]
+  orders    Order[]
+  menus     Menu[]
+  ingredients  Ingredient[]
+  inventories   Inventory[]
+}
 
 model User {
  id         String    @id @default(uuid()) @map("_id")
   password  String?
   name      String?
-  field     String   @default("")
+  field     String?
+  orders    Order[]  
+  cafe       Cafe? @relation(fields: [cafe_id], references: [id])
+  cafe_id    String?
 }
 
 model Order {
   id               String    @id @default(uuid()) @map("_id")
-  waiter      String?
+  user_id     String?
+  user         User?     @relation(fields: [user_id], references: [id])
   table       Int       
   items       OrderItem[]
+  cafe       Cafe? @relation(fields: [cafe_id], references: [id])
+  cafe_id    String?
   total       Float     
   paid        Boolean @default(false)
   served      Boolean @default(false)
   createdAt   DateTime  @default(now())
-  updatedAt    DateTime 
+  updatedAt    DateTime?
 }
 
 model OrderItem {
@@ -32,13 +48,50 @@ model OrderItem {
   orderId    String
   menuItem   Menu?      @relation(fields: [menuItemId], references: [id])
   menuItemId String
-  quantity   Int       
+  quantity   Int   
 }
 
 model Menu {
-  id               String    @id @default(uuid()) @map("_id")
+  id        String    @id @default(uuid()) @map("_id")
   name      String   
   price     Float    
   category  String
+  cafe       Cafe? @relation(fields: [cafe_id], references: [id])
+  cafe_id    String?
   orderItem OrderItem[]
+  ingredients MenuIngredient[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime?
+}
+
+model Ingredient {
+  id         String    @id @default(uuid()) @map("_id")
+  name       String   
+  amount     Float    
+  unit       String
+  inventory_id String?
+  inventory   Inventory? @relation(fields: [inventory_id], references: [id])
+  menuItems   MenuIngredient[]
+  cafe       Cafe? @relation(fields: [cafe_id], references: [id])
+  cafe_id    String?
+}
+
+model Inventory {
+  id        String    @id @default(uuid()) @map("_id")
+  name      String   
+  amount    Float    
+  unit      String
+  status    Boolean @default(true)
+  price     Float 
+  cafe       Cafe? @relation(fields: [cafe_id], references: [id])
+  cafe_id    String?
+  ingredients Ingredient[]
+}
+
+model MenuIngredient {
+  id           String    @id @default(uuid()) @map("_id")
+  menuId       String
+  ingredientId String
+  menu         Menu      @relation(fields: [menuId], references: [id])
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
 }

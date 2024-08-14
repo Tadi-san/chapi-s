@@ -10,7 +10,7 @@ export default function LoginPage() {
   async function loginUser(ev) {
     ev.preventDefault();
     try {
-      const response = await axios.post('/user/login', { name, password });
+      const response = await axios.post('/api/users/login', { name, password });
       const token = response.data.token;
       // console.log(token);
       localStorage.setItem('token', token);
@@ -49,7 +49,7 @@ export default function LoginPage() {
             required
             value={name}
             onChange={(ev)=>{setName(ev.target.value)}}
-            className=" p-2 w-full bg-transparent border border-gray-500 rounded-lg focus:outline-gray-400"
+            className=" p-2 w-full bg-transparent text-white border border-gray-500 rounded-lg focus:outline-gray-400"
             />
           </div>
           <div className=" flex flex-col items-start w-full">
@@ -59,11 +59,11 @@ export default function LoginPage() {
             required
             value={password}
             onChange={(ev)=>{setPassword(ev.target.value)}}
-            className=" p-2 w-full bg-transparent border border-gray-500 rounded-lg focus:outline-gray-400"
+            className=" p-2 w-full bg-transparent border text-white border-gray-500 rounded-lg focus:outline-gray-400"
             />
           </div>
           <div className=" flex flex-col w-full">
-          <button className="border w-full py-3 bg-[#c19250] transition duration-300 ease-in-out hover:rounded-md text-lg text-white font-semibold">Login</button>
+          <button className="w-full py-3 bg-[#c19250] transition duration-300 ease-in-out rounded-md text-lg text-white font-semibold">Login</button>
           </div>
         </form>
 

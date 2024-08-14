@@ -41,7 +41,7 @@ export default function WaiterFrontPage() {
   }
   async function getUser(){
     const tk = localStorage.getItem('token');
-      axios.get('/user/', {
+      axios.get('/api/users/', {
         headers: {
           Authorization: `Bearer ${tk}`
         }
@@ -50,16 +50,16 @@ export default function WaiterFrontPage() {
       })
   }
   function gettzaz(){
-    axios.get('/orders/unpaid-unserved').then(({data})=> setOrder(data))
+    axios.get('/api/orders/unpaid-unserved').then(({data})=> setOrder(data))
   }
   function getYetekefele(){
-    axios.get('/order/yetekefele').then(({data})=> setOrder(data))
+    axios.get('/api/orders/yetekefele').then(({data})=> setOrder(data))
   }
   function showAll(){
-    axios.get('/order/all').then(({data})=>setOrder(data))
+    axios.get('/api/orders/all').then(({data})=>setOrder(data))
       }
 function getyekerebe(){
-  axios.post('/order/yekerebe', {name}).then(({data})=> setyekerebe(data))
+  axios.post('/api/orders/yekerebe', {name}).then(({data})=> setyekerebe(data))
 }
   useEffect(()=>{
     getUser()
@@ -70,7 +70,7 @@ function getyekerebe(){
     return <Navigate to={"/waiter/addis"} />;
   }
   return (
-    <div className={" flex flex-col relative bg-[url('/brown.svg')] bg-no-repeat bg-[#111]  bg-center min-h-screen"}>
+    <div className={" flex flex-col relative bg-[url('/brown.svg')] bg-no-repeat bg-[#222]  bg-center min-h-screen"}>
      <div className=" sticky">
       <div className="min-h-8 flex justify-between gap-5 p-2 mb-2 bg-[#111]  w-full items-start">
         <div className="flex justify-center">

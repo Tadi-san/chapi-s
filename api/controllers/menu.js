@@ -2,39 +2,50 @@ import prisma from "../config/prismaConfig.js";
 
 const menuController = {
   createMenu: async (req, res) => {
-    try {
-      const { name, price, category} =
-        req.body;
+  try {
+    const { name, price, category, cafe_id } = req.body;
 
-      // Check if a student with the same name or grade already exists
-      const existingMenu = await prisma.menu.findFirst({
-        where: { name },
-      });
+    // Check if cafe exists
+    const cafe = await prisma.cafe.findFirst({
+      where: { id: cafe_id },
+    });
 
-      if (existingMenu) {
-        return res.status(400).json({ error: "Menu already exists" });
-      }
-
-      const menu = await prisma.menu.create({
-        data: {
-          name, 
-          price:parseInt(price), 
-          category
-        },
-      });
-
-      res.status(200).json(menu);
-    } catch (error) {
-      console.error({ error: "Failed to create Menu" });
-      res.status(500).json({ error: "Failed to add Menu" });
+    if (!cafe) {
+      return res.status(400).json({ error: "Cafe does not exist" });
     }
-  },
+
+    const existingMenu = await prisma.menu.findFirst({
+      where: { name, cafe_id },
+    });
+
+    if (existingMenu) {
+      return res.status(400).json({ error: "Menu already exists" });
+    }
+
+    const menu = await prisma.menu.create({
+      data: {
+        name,
+        price,
+        category,
+        cafe_id,
+      },
+    });
+
+    res.status(200).json(menu);
+  } catch (error) {
+    console.error({ error: "Failed to create Menu" });
+    res.status(500).json({ error: "Failed to add Menu" });
+  }
+},
   getMenus: async (req, res) => {
     try {
-      const Menu = await prisma.menu.findMany();
+      const { cafe_id } = req.body;
+      const Menu = await prisma.menu.findMany(
+        { where: { cafe_id: cafe_id } }
+      );
       res.status(200).json(Menu);
     } catch (error) {
-      console.error("Error retrieving Menu:", error);
+      console.error("Error retrieving Menu:", error.message);
       res.status(500).json({ error: "faild to get Menu" });
     }
   },

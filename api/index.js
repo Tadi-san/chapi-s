@@ -2,49 +2,32 @@
 import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import mongoose from "mongoose"
-import { MongoClient } from 'mongodb'
 import cookieParser from 'cookie-parser'
 
-dotenv.config();
-const bcryptSalt = bcrypt.genSaltSync(10);
-const jwtSecret = 'fasefraw4r5r3wq45wdfgw34twdfg';
 const app = express()
-
 app.use(cookieParser())
 const port = 5000
 app.use(express.json());
-
 app.use(cors({
   // origin: 'https://system1-nine.vercel.app',
-  origin: 'http://localhost:5174',
+  origin: 'http://localhost:5173',
   optionsSuccessStatus: 200,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
-  // const menuRoutes = require('./controlers/menu');
-  // const profileRoutes = require('./controlers/user');
+
   import orderRoutes from './route/order.js'
   import menuRoutes from './route/menu.js'
-  // app.use('/menu', menuRoutes);
-  // app.use('/user', profileRoutes);
-  app.use('/orders', orderRoutes);
-  app.use('/menu', menuRoutes)
+  import userRoutes from './route/user.js'
+  import ingredient from './route/ingredient.js'
+  import inventory from './route/inventory.js'
   
-  app.get('/', (req, res) => {
-  
-    res.json("test");
-  });
 
-//     // Connect to MongoDB
-//  main().then(console.log("connected to db")).catch(err => console.log(err));
-
-//  async function main() {
-//   await mongoose.connect(process.env.MONGO_URL);
-//   // use `await mongoose.connect('mongodb://user:password@127.0.0.1:27017/test');` if your database has auth enabled
-// }
+  app.use('/api/orders', orderRoutes);
+  app.use('/api/menus', menuRoutes);
+  app.use('/api/users', userRoutes);
+  app.use('/api/ingredients', ingredient);
+  app.use('/api/inventories', inventory);
 
 
   app.listen(port, () => {

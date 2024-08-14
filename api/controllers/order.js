@@ -2,17 +2,14 @@ import prisma from "../config/prismaConfig.js";
 
 const orderController = {
   // CRUD
-  
+  //TODO: ADD cafe_id to every thing
   createOrder: async (req, res) => {
     try {
-      const { items, table, total, waiter } = req.body;
+      const { user_id, items, total, cafe_id, table } = req.body;
 
       const order = await prisma.order.create({
         data: {
-          table,
-          total,
-          waiter,
-          total,
+          user_id, total, cafe_id, table
         },
       });
 
@@ -186,7 +183,9 @@ const orderController = {
       res.status(500).json({ error: 'Failed to delete order' });
   }
 },
+
 // Actions
+
 payOrder:async (req, res)=>{
   try {
     const {id} = req.body;
@@ -241,6 +240,105 @@ unserveOrder:async (req, res)=>{
     res.status(200).json(order) 
   } catch (error) {
     
+  }
+},
+createOrder: async (req, res) => {
+  try {
+    const { user_id, items, total, cafe_id, table } = req.body;
+
+    // Start a database transaction
+    const result = await prisma.$transaction(async () => {
+      // Create the order
+      const order = await prisma.order.create({
+        data: {
+          user_id,
+          total,
+          cafe_id,
+          table,
+        },
+      });
+
+      // Create the order items
+      const orderItems = await Promise.all(
+        items.map(async (item) => {
+          const menuItem = await prisma.menu.findUnique({
+            where: {
+              name: item.menuItem,
+            },
+            include: {
+              ingredients: {
+                include: {
+                  ingredient: true,
+                },
+              },
+            },
+          });
+
+          const orderItem = await prisma.orderItem.create({
+            data: {
+              menuItemId: menuItem.id,
+              orderId: order.id,
+              quantity: item.quantity,
+            },
+          });
+
+          // Update the inventory for each ingredient
+          await Promise.all(
+            menuItem.ingredient.map(async (menuIngredient) => {
+              const ingredient = menuIngredient.ingredient;
+              await prisma.inventory.update({
+                where: {
+                  id: ingredient.inventory_id,
+                },
+                data: {
+                  amount: {
+                    decrement: menuIngredient.quantity * item.quantity,
+                  },
+                },
+              });
+            })
+          );
+
+          return orderItem;
+        })
+      );
+
+      return { order, orderItems };
+    });
+
+    res.status(201).json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error creating order' });
+  }
+},
+deleteOrder: async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    // Start a database transaction
+    const result = await prisma.$transaction(async () => {
+      // Delete the order items associated with the order
+      await prisma.orderItem.deleteMany({
+        where: {
+          orderId,
+        },
+      });
+
+      // Delete the order
+      const deletedOrder = await prisma.order.delete({
+        where: {
+          id: orderId,
+        },
+      });
+
+      return deletedOrder;
+    });
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error deleting order' });
   }
 },
 
@@ -319,7 +417,7 @@ getUnpaidUnserved: async (req, res) => {
     });
 
     if (orders.length === 0) {
-      return res.status(404).json({ message: 'No unpaid and unserved orders found.' });
+      return res.status(400).json({ message: 'No unpaid and unserved orders found.' });
     }
 
     res.status(200).json(orders);
