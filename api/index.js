@@ -19,15 +19,16 @@ app.use(cors({
   import orderRoutes from './route/order.js'
   import menuRoutes from './route/menu.js'
   import userRoutes from './route/user.js'
-  import ingredient from './route/ingredient.js'
-  import inventory from './route/inventory.js'
-  
+  import ingredientRoutes from './route/ingredient.js'
+  import inventoryRoutes from './route/inventory.js'
+  import cafeRoutes from './route/cafe.js'
 
   app.use('/api/orders', orderRoutes);
   app.use('/api/menus', menuRoutes);
   app.use('/api/users', userRoutes);
-  app.use('/api/ingredients', ingredient);
-  app.use('/api/inventories', inventory);
+  app.use('/api/ingredients', ingredientRoutes);
+  app.use('/api/inventories', inventoryRoutes);
+  app.use('/api/cafe', cafeRoutes);
 
 
   app.listen(port, () => {

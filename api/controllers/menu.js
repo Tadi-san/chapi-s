@@ -5,7 +5,6 @@ const menuController = {
   try {
     const { name, price, category, cafe_id } = req.body;
 
-    // Check if cafe exists
     const cafe = await prisma.cafe.findFirst({
       where: { id: cafe_id },
     });
@@ -51,7 +50,7 @@ const menuController = {
   },
   getMenuById: async (req, res) => {
     try {
-      const { id } = req.body;
+      const { id } = req.params;
 
       const menu = await prisma.menu.findUnique({ where: { id } });
 

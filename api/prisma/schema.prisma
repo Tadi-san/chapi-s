@@ -9,7 +9,7 @@ datasource db {
  
 model Cafe {
  id         String    @id @default(uuid()) @map("_id")
-  name      String?
+  name      String? @unique
   users     User[]
   orders    Order[]
   menus     Menu[]
@@ -21,10 +21,16 @@ model User {
  id         String    @id @default(uuid()) @map("_id")
   password  String?
   name      String?
-  field     String?
+  field     Field?
   orders    Order[]  
   cafe       Cafe? @relation(fields: [cafe_id], references: [id])
   cafe_id    String?
+}
+
+enum Field {
+  Waiter
+  Cashier
+  Admin
 }
 
 model Order {
@@ -63,6 +69,11 @@ model Menu {
   createdAt DateTime  @default(now())
   updatedAt DateTime?
 }
+enum Category {
+  Food
+  Drink
+  Other
+}
 
 model Ingredient {
   id         String    @id @default(uuid()) @map("_id")
@@ -95,3 +106,4 @@ model MenuIngredient {
   menu         Menu      @relation(fields: [menuId], references: [id])
   ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
 }
+

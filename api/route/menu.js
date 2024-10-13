@@ -3,10 +3,10 @@ const router = express.Router();
 import menuController from '../controllers/menu.js';
 const menuControllerInstance = menuController;
 
-router.post('/', menuControllerInstance.getMenus);
-router.post('/create', menuControllerInstance.createMenu);
-router.post('/find', menuControllerInstance.getMenuById);
-router.post('/update/:id', menuControllerInstance.updateMenu);
-router.get('/delete/:id', menuControllerInstance.deleteMenu);
+router.get('/', menuControllerInstance.getMenus);
+router.post('/', menuControllerInstance.createMenu);
+router.get('/:id', menuControllerInstance.getMenuById);
+router.put('/:id', menuControllerInstance.updateMenu);
+router.delete('/:id', menuControllerInstance.deleteMenu);
 
 export default router;
