@@ -37,7 +37,7 @@ model Order {
   id               String    @id @default(uuid()) @map("_id")
   user_id     String?
   user         User?     @relation(fields: [user_id], references: [id])
-  table       Int       
+  table       String ?     
   items       OrderItem[]
   cafe       Cafe? @relation(fields: [cafe_id], references: [id])
   cafe_id    String?
@@ -101,9 +101,9 @@ model Inventory {
 
 model MenuIngredient {
   id           String    @id @default(uuid()) @map("_id")
-  menuId       String
-  ingredientId String
-  menu         Menu      @relation(fields: [menuId], references: [id])
-  ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
+  menu_id       String
+  ingredient_id String
+  menu         Menu      @relation(fields: [menu_id], references: [id])
+  ingredient   Ingredient @relation(fields: [ingredient_id], references: [id])
 }
 

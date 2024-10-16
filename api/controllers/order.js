@@ -3,53 +3,110 @@ import prisma from "../config/prismaConfig.js";
 const orderController = {
   // CRUD
   //TODO: ADD cafe_id to every thing
-  createOrder: async (req, res) => {
-    try {
-      const { user_id, items, total, cafe_id, table } = req.body;
+createOrder: async (req, res) => {
+  try {
+    const { user_id, items, total, cafe_id, table } = req.body;
 
+    // Start a database transaction
+    const result = await prisma.$transaction(async () => {
+      // Create the order
       const order = await prisma.order.create({
         data: {
-          user_id, total, cafe_id, table
+          user_id,
+          total,
+          cafe_id,
+          table,
         },
       });
 
-      if (!order) {
-        throw new Error("Order not created");
-      }
+      // Create the order items
+      const orderItems = await Promise.all(
+        items.map(async (item) => {
+          const menuItem = await prisma.menu.findUnique({
+            where: {
+              id: item.menuItemId,
+            },
+            include: {
+              ingredients: {
+                include: {
+                  ingredient: true,
+                },
+              },
+            },
+          });
 
-      const createdOrders = await prisma.$transaction(
-        items.map((item) =>
-          prisma.orderItem.create({
+          const orderItem = await prisma.orderItem.create({
             data: {
-              menuItemId: item.menuItem,
+              menuItemId: menuItem.id,
               orderId: order.id,
               quantity: item.quantity,
             },
-          })
-        )
+          });
+
+          // Update the inventory for each ingredient
+          await Promise.all(
+            menuItem.ingredients.map(async (menuIngredient) => {
+              const ingredient = menuIngredient.ingredient;
+              const decrementAmount = ingredient.quantity * item.quantity;
+
+              // Ensure decrementAmount is valid
+              if (decrementAmount > 0) {
+                await prisma.inventory.update({
+                  where: {
+                    id: ingredient.inventory_id,
+                  },
+                  data: {
+                    amount: {
+                      decrement: decrementAmount,
+                    },
+                  },
+                });
+              }
+            })
+          );
+
+          return orderItem;
+        })
       );
 
-      if (!createdOrders) {
-        throw new Error("Order items not created");
-      }
+      return { order, orderItems };
+    });
 
-      const finalOrder = await prisma.order.findUnique({
-        where: { id: order.id },
-        include: {
-          items: true,
-        },
-      });
-
-      if (!finalOrder) {
-        throw new Error("Could not get final order");
-      }
-
-      console.log("Final order:", finalOrder);
-      return res.status(200).json(finalOrder);
-    } catch (error) {
-      console.error("Error creating order:", error);
-      return res.status(500).json({ error: "Error creating order" });
+    res.status(201).json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error creating order' });
+  }
+},
+getOrders:async (req,res)=>{
+  try {
+    const { paid, served, all, cafe_id} = req.query
+    if (!all){
+      const whereClause = {}
+      whereClause.paid = paid
+      whereClause.served = served
+      whereClause.cafe_id = cafe_id
+    const orders = await prisma.order.findMany({
+      where:whereClause
+    })
+    if (!orders){
+      console.log("faild to get  orders")
+      res.status(500).json("faild to get  orders")
     }
+    res.status(200).json(orders)
+    }
+    else{
+      const orders = await prisma.order.findMany({where:{cafe_id:cafe_id}})
+      if (!orders){
+        console.log("faild to get  orders")
+        res.status(500).json("faild to get  orders")
+      }
+      res.status(200).json(orders)
+    }
+
+  } catch (error) {
+    
+  }
 },
   updateOrder: async (req, res) => {
     try {
@@ -114,19 +171,6 @@ const orderController = {
     } catch (error) {
       console.error("Error updating order:", error);
       return res.status(500).json({ error: "Error updating order" });
-    }
-},
-  getOrders: async (req, res) => {
-    try {
-        const Orders = await prisma.order.findMany({
-          include:{
-            items:true
-          }
-        })
-        res.status(200).json(Orders)
-    } catch (error) {
-        console.error('Error retrieving Orders:', error)
-        res.status(500).json({ error: "faild to get Orders" })
     }
 },
   getOrderById: async (req, res) => {
@@ -242,76 +286,6 @@ unserveOrder:async (req, res)=>{
     
   }
 },
-createOrder: async (req, res) => {
-  try {
-    const { user_id, items, total, cafe_id, table } = req.body;
-
-    // Start a database transaction
-    const result = await prisma.$transaction(async () => {
-      // Create the order
-      const order = await prisma.order.create({
-        data: {
-          user_id,
-          total,
-          cafe_id,
-          table,
-        },
-      });
-
-      // Create the order items
-      const orderItems = await Promise.all(
-        items.map(async (item) => {
-          const menuItem = await prisma.menu.findUnique({
-            where: {
-              name: item.menuItem,
-            },
-            include: {
-              ingredients: {
-                include: {
-                  ingredient: true,
-                },
-              },
-            },
-          });
-
-          const orderItem = await prisma.orderItem.create({
-            data: {
-              menuItemId: menuItem.id,
-              orderId: order.id,
-              quantity: item.quantity,
-            },
-          });
-
-          // Update the inventory for each ingredient
-          await Promise.all(
-            menuItem.ingredient.map(async (menuIngredient) => {
-              const ingredient = menuIngredient.ingredient;
-              await prisma.inventory.update({
-                where: {
-                  id: ingredient.inventory_id,
-                },
-                data: {
-                  amount: {
-                    decrement: menuIngredient.quantity * item.quantity,
-                  },
-                },
-              });
-            })
-          );
-
-          return orderItem;
-        })
-      );
-
-      return { order, orderItems };
-    });
-
-    res.status(201).json(result);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error creating order' });
-  }
-},
 deleteOrder: async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -344,88 +318,74 @@ deleteOrder: async (req, res) => {
 
 // Get Actions
 
-getPaid:async (req,res)=>{
-  try {
-    const orders = await prisma.order.findMany({
-      where:{paid:true}
-    })
-    if (!orders){
-      console.log("faild to get paid orders")
-      res.status(500).json("faild to get paid orders")
-    }
 
-    res.status(200).json(orders)
-  } catch (error) {
+// getUnpaid:async (req,res)=>{
+//   try {
+//     const orders = await prisma.order.findMany({
+//       where:{paid:false}
+//     })
+//     if (!orders){
+//       console.log("faild to get unpaid orders")
+//       res.status(500).json("faild to get unpaid orders")
+//     }
     
-  }
-},
-getUnpaid:async (req,res)=>{
-  try {
-    const orders = await prisma.order.findMany({
-      where:{paid:false}
-    })
-    if (!orders){
-      console.log("faild to get unpaid orders")
-      res.status(500).json("faild to get unpaid orders")
-    }
+//     res.status(200).json(orders)
+//   } catch (error) {
     
-    res.status(200).json(orders)
-  } catch (error) {
+//   }
+// },
+// getServed:async (req,res)=>{
+//   try {
+//     const orders = await prisma.order.findMany({
+//       where:{served:true}
+//     })
+//     if (!orders){
+//       console.log("faild to get served orders")
+//       res.status(500).json("faild to get served orders")
+//     }
     
-  }
-},
-getServed:async (req,res)=>{
-  try {
-    const orders = await prisma.order.findMany({
-      where:{served:true}
-    })
-    if (!orders){
-      console.log("faild to get served orders")
-      res.status(500).json("faild to get served orders")
-    }
+//     res.status(200).json(orders)
+//   } catch (error) {
     
-    res.status(200).json(orders)
-  } catch (error) {
-    
-  }
-},
-getUnserve:async (req,res)=>{
-  try {
-    const orders = await prisma.order.findMany({
-      where:{served:false}
-    })
-    if (!orders){
-      console.log("faild to get unServed orders")
-      res.status(500).json("faild to get unServed orders")
-    }
+//   }
+// },
+// getUnserve:async (req,res)=>{
+//   try {
+//     const orders = await prisma.order.findMany({
+//       where:{served:false}
+//     })
+//     if (!orders){
+//       console.log("faild to get unServed orders")
+//       res.status(500).json("faild to get unServed orders")
+//     }
 
-    res.status(200).json(orders)
-  } catch (error) {
+//     res.status(200).json(orders)
+//   } catch (error) {
     
-  }
-},
-getUnpaidUnserved: async (req, res) => {
-  try {
-    const orders = await prisma.order.findMany({
-      where: {
-        served: false,
-        paid: false,
-      },
-      include:{
-        items: true
-      }
-    });
+//   }
+// },
+// getUnpaidUnserved: async (req, res) => {
+//   try {
+//     const orders = await prisma.order.findMany({
+//       where: {
+//         served: false,
+//         paid: false,
+//       },
+//       include:{
+//         items: true
+//       }
+//     });
 
-    if (orders.length === 0) {
-      return res.status(400).json({ message: 'No unpaid and unserved orders found.' });
-    }
+//     if (orders.length === 0) {
+//       return res.status(400).json({ message: 'No unpaid and unserved orders found.' });
+//     }
 
-    res.status(200).json(orders);
-  } catch (error) {
-    console.error('Error getting unpaid and unserved orders:', error);
-    res.status(500).json({ message: 'Failed to get unpaid and unserved orders.' });
-  }
-},
+//     res.status(200).json(orders);
+//   } catch (error) {
+//     console.error('Error getting unpaid and unserved orders:', error);
+//     res.status(500).json({ message: 'Failed to get unpaid and unserved orders.' });
+//   }
+// },
 
 
 };

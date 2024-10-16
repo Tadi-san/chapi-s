@@ -49,7 +49,7 @@ if (!inventory) {
   },
   getIngredientById: async (req, res) => {
     try {
-      const { id } = req.body;
+      const { id } = req.params;
 
       const ingredient = await prisma.ingredient.findUnique({ where: { id } });
 
@@ -99,8 +99,23 @@ if (!inventory) {
       res.status(500).json({ error: "Failed to delete ingredient" });
     }
   },
+  menuIngredient: async (req, res) => {
+    try {
+      const {menu_id, ingredient_id} = req.body
 
+      const menuIngredient = await prisma.menuIngredient.create({
+        data: {
+          menu_id: menu_id,
+          ingredient_id: ingredient_id
+        }
+      })
+      res.status(200).json(menuIngredient)
 
-};
+    }catch(error){
+      console.error("Error deleting ingredient:", error);
+      res.status(500).json({ error: "Failed to delete ingredient" });
+    }
+}
+}
 
 export default ingredientController;

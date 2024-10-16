@@ -1,4 +1,5 @@
 import prisma from "../config/prismaConfig.js";
+import inventoryController from "./inventory.js";
 
 const menuController = {
   createMenu: async (req, res) => {
@@ -38,9 +39,12 @@ const menuController = {
 },
   getMenus: async (req, res) => {
     try {
-      const { cafe_id } = req.body;
+      const { cafe_id } = req.query;
       const Menu = await prisma.menu.findMany(
-        { where: { cafe_id: cafe_id } }
+        { where: { cafe_id: cafe_id },
+        include: {
+          ingredients: true,
+        }}
       );
       res.status(200).json(Menu);
     } catch (error) {
@@ -52,7 +56,10 @@ const menuController = {
     try {
       const { id } = req.params;
 
-      const menu = await prisma.menu.findUnique({ where: { id } });
+      const menu = await prisma.menu.findUnique({ where: { id },
+        include: {
+        ingredients: true,
+      } });
 
       if (!menu) {
         return res.status(404).json({ error: "menu not found" });

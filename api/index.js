@@ -22,6 +22,7 @@ app.use(cors({
   import ingredientRoutes from './route/ingredient.js'
   import inventoryRoutes from './route/inventory.js'
   import cafeRoutes from './route/cafe.js'
+  import menuIngredientRoutes from './route/menu-ingredient.js'
 
   app.use('/api/orders', orderRoutes);
   app.use('/api/menus', menuRoutes);
@@ -29,6 +30,8 @@ app.use(cors({
   app.use('/api/ingredients', ingredientRoutes);
   app.use('/api/inventories', inventoryRoutes);
   app.use('/api/cafe', cafeRoutes);
+  app.use('/api/menu-ingredients', menuIngredientRoutes);
+  
 
 
   app.listen(port, () => {

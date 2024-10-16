@@ -3,9 +3,8 @@ import prisma from "../config/prismaConfig.js";
 const inventoryController = {
   createInventory: async (req, res) => {
     try {
-      const { name, amount, unit, cafe_id} =
+      const { name, amount, unit, cafe_id, price} =
         req.body;
-        //check if cafe exists
         const cafe = await prisma.cafe.findFirst({
           where: { id: cafe_id },
         });
@@ -17,13 +16,14 @@ const inventoryController = {
             name, 
             amount: parseFloat(amount),
             unit,
-            cafe_id
+            cafe_id,
+            price:parseFloat(price)
         },
       });
 
       res.status(200).json(inventory);
     } catch (error) {
-      console.error({ error: "Failed to create inventory" });
+      console.error({ error: "Failed to create inventory", error });
       res.status(500).json({ error: "Failed to add inventory" });
     }
   },
@@ -43,7 +43,7 @@ const inventoryController = {
   },
   getInventoryById: async (req, res) => {
     try {
-      const { id } = req.body;
+      const { id } = req.params;
 
       const inventory = await prisma.inventory.findUnique({ where: { id } });
 
@@ -59,7 +59,7 @@ const inventoryController = {
   updateInventory: async (req, res) => {
     try {
       const { id } = req.params;
-      const {amount, unit, name} =
+      const {amount, unit, name, price} =
         req.body;
 
       const existinginventory = await prisma.inventory.findUnique({
@@ -72,7 +72,12 @@ const inventoryController = {
 
       const updatedinventory = await prisma.inventory.update({
         where: { id },
-        data:{amount:parseFloat(amount), unit, name},
+        data:{
+          amount:parseFloat(amount), 
+          unit, 
+          name, 
+          price: parseFloat(price),
+        },
       });
 
       res.status(200).json(updatedinventory);
