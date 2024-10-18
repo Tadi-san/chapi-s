@@ -80,12 +80,14 @@ createOrder: async (req, res) => {
 },
 getOrders:async (req,res)=>{
   try {
-    const { paid, served, all, cafe_id} = req.query
+    const { paid, served, all, cafe_id, table, waiter_id, } = req.query
     if (!all){
       const whereClause = {}
       whereClause.paid = paid
       whereClause.served = served
       whereClause.cafe_id = cafe_id
+      whereClause.table = table
+      whereClause.user_id = waiter_id
     const orders = await prisma.order.findMany({
       where:whereClause
     })

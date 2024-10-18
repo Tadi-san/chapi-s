@@ -3,7 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import cookieParser from 'cookie-parser'
-
+dotenv.config()
 const app = express()
 app.use(cookieParser())
 const port = 5000
@@ -15,6 +15,7 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 }));
+
 
   import orderRoutes from './route/order.js'
   import menuRoutes from './route/menu.js'
@@ -37,24 +38,3 @@ app.use(cors({
   app.listen(port, () => {
     console.log('Server is running on port 5000');
   });
-
-// const prisma = new PrismaClient();
-
-// async function main() {
-//   try {
-//     await prisma.user.create({
-//       data: {
-//         email:"dshjk@gshj"
-//       },
-//     });
-
-//     const fees = await prisma.user.findMany();
-//     console.table(fees);
-//   } catch (error) {
-//     console.error(error);
-//   } finally {
-//     await prisma.$disconnect();
-//   }
-// }
-
-// main();
